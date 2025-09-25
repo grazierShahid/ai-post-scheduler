@@ -9,6 +9,9 @@ Run those commands to run the backend
 python -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
+
+alembic init # already have alembic files, so no need
+alembic revision --autogenerate -m "core db models"
 alembic upgrade head
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000 &
 celery -A app.tasks.celery worker --loglevel=info &
@@ -21,6 +24,8 @@ celery -A app.tasks.celery beat --loglevel=info
 python -m venv venv
 .\venv\Scripts\activate
 pip install -r requirements.txt
+
+alembic init # already have alembic files, so no need
 alembic upgrade head
 start "API" cmd /c "uvicorn app.main:app --reload --host 0.0.0.0 --port 8000"
 start "Celery Worker" cmd /c "celery -A app.tasks.celery worker --loglevel=info"
