@@ -1,0 +1,126 @@
+services:
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    container_name: social_scheduler_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: social_scheduler
+      MYSQL_USER: scheduler_user
+      MYSQL_PASSWORD: scheduler_password
+      MYSQL_ROOT_PASSWORD: root_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./backend/scripts:/docker-entrypoint-initdb.d
+    networks:
+      - social_scheduler_network
+
+  # Redis for Celery
+  redis:
+    image: redis:7-alpine
+    container_name: social_scheduler_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    networks:
+      - social_scheduler_network
+
+  # Backend FastAPI service
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: social_scheduler_backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: mysql+pymysql://scheduler_user:scheduler_password@mysql:3306/social_scheduler
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+    volumes:
+      - ./backend:/app
+      - backend_static:/app/static
+    depends_on:
+      - mysql
+      - redis
+    networks:
+      - social_scheduler_network
+    command: ["sh", "-c", "sleep 10 && alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"]
+
+  # Celery Worker
+  celery-worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: social_scheduler_celery_worker
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: mysql+pymysql://scheduler_user:scheduler_password@mysql:3306/social_scheduler
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+    volumes:
+      - ./backend:/app
+      - backend_static:/app/static
+    depends_on:
+      - mysql
+      - redis
+      - backend
+    networks:
+      - social_scheduler_network
+    command: ["sh", "-c", "sleep 15 && celery -A app.tasks.celery worker --loglevel=info"]
+
+  # Celery Beat (Scheduler)
+  celery-beat:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: social_scheduler_celery_beat
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: mysql+pymysql://scheduler_user:scheduler_password@mysql:3306/social_scheduler
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+    volumes:
+      - ./backend:/app
+      - backend_static:/app/static
+    depends_on:
+      - mysql
+      - redis
+      - backend
+    networks:
+      - social_scheduler_network
+    command: ["sh", "-c", "sleep 20 && celery -A app.tasks.celery beat --loglevel=info"]
+
+  # Frontend service
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: social_scheduler_frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_BASE_URL: http://localhost:8000
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      - backend
+    networks:
+      - social_scheduler_network
+
+volumes:
+  mysql_data:
+  backend_static:
+
+networks:
+  social_scheduler_network:
+    driver: bridge
