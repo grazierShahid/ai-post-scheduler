@@ -163,7 +163,7 @@ export default function AnalyticsDashboard() {
                 cx="50%"
                 cy="50%"
                 labelLine={false}
-                label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                label={({ name, percent }) => `${name}: ${((percent as number) * 100).toFixed(0)}%`}
                 outerRadius={80}
                 fill="#8884d8"
                 dataKey="value"
@@ -200,7 +200,7 @@ export default function AnalyticsDashboard() {
           </div>
         ) : (
           <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-center">
-            <p className="text-gray-600">Click "Generate Insight" to get AI-powered analysis of your posting performance.</p>
+            <p className="text-gray-600">Click &quot;Generate Insight&quot; to get AI-powered analysis of your posting performance.</p>
           </div>
         )}
       </div>

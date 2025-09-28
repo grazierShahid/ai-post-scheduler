@@ -41,6 +41,7 @@ services:
       REDIS_URL: redis://redis:6379/0
       CELERY_BROKER_URL: redis://redis:6379/0
       CELERY_RESULT_BACKEND: redis://redis:6379/0
+      USE_DUMMY_AI_PROVIDER: "True"
     volumes:
       - ./backend:/app
       - backend_static:/app/static
@@ -49,7 +50,20 @@ services:
       - redis
     networks:
       - social_scheduler_network
-    command: ["sh", "-c", "sleep 10 && alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"]
+    command: >
+      bash -c "
+      echo \"Waiting for MySQL...\";
+      while ! mysqladmin ping -h\"mysql\" --silent; do
+          sleep 1;
+      done;
+      echo \"MySQL is up!\";
+      echo \"Applying database migrations...\";
+      alembic upgrade head;
+      echo \"Seeding dummy data...\";
+      mysql -u root -p\"$MYSQL_ROOT_PASSWORD\" social_scheduler < scripts/dummy_seed.sql;
+      echo \"Starting backend application...\";
+      exec uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+      "
 
   # Celery Worker
   celery-worker:

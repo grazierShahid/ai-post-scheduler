@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { Palette, Type, Move, Save } from 'lucide-react';
 import { productApi } from '@/lib/api';
@@ -39,7 +39,7 @@ export default function ProductCustomizer() {
   const watchedSize = watch('text_size');
   const watchedColor = watch('text_color');
 
-  const drawCanvas = () => {
+  const drawCanvas = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -77,11 +77,11 @@ export default function ProductCustomizer() {
       watchedSize + 10
     );
     ctx.setLineDash([]);
-  };
+  }, [watchedText, watchedSize, watchedColor, textPosition]);
 
   useEffect(() => {
     drawCanvas();
-  }, [watchedText, watchedSize, watchedColor, textPosition]);
+  }, [drawCanvas]);
 
   const handleMouseDown = (event: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;

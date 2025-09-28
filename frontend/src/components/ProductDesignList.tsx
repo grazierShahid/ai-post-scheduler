@@ -103,7 +103,7 @@ export default function ProductDesignList() {
               {/* Design Info */}
               <div className="p-4">
                 <h3 className="font-semibold text-gray-900 mb-2 truncate">
-                  "{design.custom_text}"
+                  &quot;{design.custom_text}&quot;
                 </h3>
 
                 <div className="space-y-2 text-sm text-gray-600">

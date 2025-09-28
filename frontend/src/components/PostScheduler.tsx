@@ -5,8 +5,9 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Calendar, Clock, Hash, Target, Megaphone, Upload, Wand2, Link } from 'lucide-react';
+import Image from 'next/image';
 import { postApi } from '@/lib/api';
-import { PlatformType, PostTone, AISuggestionsRequest } from '@/types/api';
+import { PlatformType, PostTone, AISuggestionsRequest, AIBestTimeRequest } from '@/types/api';
 
 const postSchema = z.object({
   user_id: z.number().min(1),
@@ -155,10 +156,14 @@ export default function PostScheduler() {
       setSelectedImage(null);
       setImagePreview(null);
       setValue('image_url', '');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error submitting post:', error);
-      console.error('Error response:', error.response?.data);
-      console.error('Error status:', error.response?.status);
+      if (error && typeof error === 'object' && 'response' in error) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const response = error.response as { data: any; status: number };
+        console.error('Error response:', response.data);
+        console.error('Error status:', response.status);
+      }
       alert('Failed to schedule post. Please try again.');
     } finally {
       setIsSubmitting(false);
@@ -239,10 +244,12 @@ export default function PostScheduler() {
 
           {imagePreview && (
             <div className="mt-2">
-              <img
+              <Image
                 src={imagePreview}
                 alt="Preview"
-                className="w-32 h-32 object-cover rounded-md"
+                width={128}
+                height={128}
+                className="object-cover rounded-md"
               />
             </div>
           )}

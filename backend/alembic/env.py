@@ -33,10 +33,10 @@ if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
 db_host = os.getenv("DB_HOST", "localhost")
-db_port = os.getenv("DB_PORT", "5432")
-db_name = os.getenv("DB_NAME", "affpilot")
-db_user = os.getenv("DB_USER", "affpilot")
-db_password = os.getenv("DB_PASSWORD", "affpilot")
+db_port = os.getenv("DB_PORT", "3306")
+db_name = os.getenv("DB_NAME", "social_scheduler")
+db_user = os.getenv("DB_USER", "scheduler_user")
+db_password = os.getenv("DB_PASSWORD", "scheduler_password")
 db_url = f"mysql+mysqlconnector://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
 
 # Prefer the application's DATABASE_URL when available so Alembic uses the
@@ -48,9 +48,9 @@ else:
     # load the database URL from the environment variable
     db_host = os.getenv("DB_HOST", "localhost")
     db_port = os.getenv("DB_PORT", "3306")
-    db_name = os.getenv("DB_NAME", "affpilot")
-    db_user = os.getenv("DB_USER", "affpilot")
-    db_password = os.getenv("DB_PASSWORD", "affpilot")
+    db_name = os.getenv("DB_NAME", "social_scheduler")
+    db_user = os.getenv("DB_USER", "scheduler_user")
+    db_password = os.getenv("DB_PASSWORD", "scheduler_password")
     db_url = f"mysql+pymysql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
     url = config.set_main_option("sqlalchemy.url", db_url)
 
